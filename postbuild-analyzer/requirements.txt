@@ -1,0 +1,8 @@
+# Requirements for PostBuild Analyzer
+pytest>=7.0.0
+pytest-cov>=3.0.0
+bandit>=1.7.0
+flake8>=4.0.0
+mypy>=0.950
+ruff>=0.1.0
+pyyaml>=6.0

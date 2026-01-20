@@ -1,0 +1,244 @@
+{
+  "version": "1.0.0",
+  "repository": "https://github.com/example/postbuild-analyzer",
+  "ref": "abc1234e",
+  "timestamp_utc": "2026-01-19T14:32:18.123456Z",
+  "overall_status": "warning",
+  "build_summary": {
+    "build_status": "failure",
+    "build_log_excerpt": "Sample build output log\n=======================\n\nStarting tests...\nRunning: pytest tests/ -v\n\ntests/test_sample.py::test_parse_config_valid PASSED\ntests/test_sample.py::test_calculate_total PASSED\ntests/test_sample.py::test_calculate_total_empty PASSED\ntests/test_sample.py::test_hardcoded_credentials PASSED\ntests/test_sample.py::test_parse_config_invalid FAILED\n\n... [truncated] ...\n\nbandit security check...\nsrc/sample_module.py:38: HIGH - Use of eval() detected\nsrc/sample_module.py:44: MEDIUM - Potential hardcoded password\n\nBuild completed with warnings."
+  },
+  "tests": {
+    "total": 5,
+    "passed": 4,
+    "failed": 1,
+    "skipped": 0,
+    "failures": [
+      {
+        "test_id": "test_parse_config_invalid",
+        "file": "tests/test_sample.py",
+        "line": 28,
+        "message": "IndexError: list index out of range",
+        "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_sample.py\", line 30, in test_parse_config_invalid\n    result = parse_config('')\n  File \"src/sample_module.py\", line 8, in parse_config\n    first_line = lines[0]\nIndexError: list index out of range"
+      }
+    ]
+  },
+  "coverage": {
+    "overall_percent": 72.5,
+    "files_below_threshold": [
+      {
+        "file": "src/sample_module.py",
+        "percent": 60.0
+      },
+      {
+        "file": "src/utils.py",
+        "percent": 45.5
+      }
+    ]
+  },
+  "static_analysis": {
+    "linters": [
+      {
+        "tool": "flake8",
+        "issues": [
+          {
+            "file": "src/sample_module.py",
+            "line": 5,
+            "code": "E302",
+            "message": "Expected 2 blank lines, found 0",
+            "severity": "warning"
+          },
+          {
+            "file": "src/sample_module.py",
+            "line": 15,
+            "code": "W291",
+            "message": "Trailing whitespace",
+            "severity": "warning"
+          }
+        ]
+      }
+    ],
+    "security": [
+      {
+        "tool": "bandit",
+        "issues": [
+          {
+            "file": "src/sample_module.py",
+            "line": 38,
+            "message": "Use of eval() detected. This can be dangerous.",
+            "severity": "high",
+            "cwe": "CWE-95"
+          },
+          {
+            "file": "src/sample_module.py",
+            "line": 44,
+            "message": "Potential hardcoded password",
+            "severity": "medium",
+            "cwe": "CWE-798"
+          }
+        ]
+      }
+    ],
+    "type_checks": [
+      {
+        "tool": "mypy",
+        "issues": [
+          {
+            "file": "src/sample_module.py",
+            "line": 10,
+            "code": "index-error",
+            "message": "Potentially missing dict key 'price'",
+            "severity": "error"
+          }
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "test_001",
+      "title": "Failing test: test_parse_config_invalid",
+      "category": "bug",
+      "severity": "critical",
+      "description": "IndexError: list index out of range",
+      "evidence": [
+        {
+          "file": "tests/test_sample.py",
+          "line": 28,
+          "excerpt": "Traceback (most recent call last):\n  File \"tests/test_sample.py\", line 30, in test_parse_config_invalid\n    result = parse_config('')\n  File \"src/sample_module.py\", line 8, in parse_config\n    first_line = lines[0]\nIndexError: list index out of range"
+        }
+      ],
+      "recommendation": "Fix the failing test. The parse_config function doesn't handle empty files. Add validation for empty input.",
+      "confidence": 1.0,
+      "patch": {
+        "path": "src/sample_module.py",
+        "diff": "--- a/src/sample_module.py\n+++ b/src/sample_module.py\n@@ -5,9 +5,12 @@ def parse_config(config_path):\n \"\"\"Parse configuration file. Contains null dereference bug.\"\"\"\n     with open(config_path) as f:\n         data = f.read()\n-    \n+\n+    # Validate input\n+    if not data.strip():\n+        raise ValueError(\"Config file is empty\")\n+\n     lines = data.split('\\n')\n-    first_line = lines[0]  # Could fail if file is empty\n+    first_line = lines[0]\n     return {\n         'name': first_line.split('=')[1],\n         'value': lines[1].split('=')[1]\n"
+      }
+    },
+    {
+      "id": "sec_001",
+      "title": "Security: Use of eval() detected",
+      "category": "security",
+      "severity": "high",
+      "description": "Unsafe use of eval() on potentially untrusted input. CWE-95: Improper Neutralization of Directives in Dynamically Evaluated Code.",
+      "evidence": [
+        {
+          "file": "src/sample_module.py",
+          "line": 38,
+          "excerpt": "def unsafe_eval_config(user_input):\n    \"\"\"SECURITY: Unsafe use of eval.\"\"\"\n    result = eval(user_input)  # CWE-95\n    return result"
+        }
+      ],
+      "recommendation": "Replace eval() with a safe alternative like ast.literal_eval() or a proper parser. Never eval() untrusted input.",
+      "confidence": 0.95,
+      "patch": {
+        "path": "src/sample_module.py",
+        "diff": "--- a/src/sample_module.py\n+++ b/src/sample_module.py\n@@ -1,3 +1,4 @@ \n+import ast\n \n def unsafe_eval_config(user_input):\n     \"\"\"SECURITY: Unsafe use of eval.\"\"\"\n-    result = eval(user_input)  # CWE-95\n+    result = ast.literal_eval(user_input)  # Safe alternative\n     return result\n"
+      }
+    },
+    {
+      "id": "sec_002",
+      "title": "Security: Hardcoded credentials detected",
+      "category": "security",
+      "severity": "high",
+      "description": "Hardcoded API key and password in source code. CWE-798: Use of Hard-Coded Credentials.",
+      "evidence": [
+        {
+          "file": "src/sample_module.py",
+          "line": 44,
+          "excerpt": "def hardcoded_credentials():\n    \"\"\"SECURITY: Hardcoded credentials.\"\"\"\n    api_key = \"sk_live_abcdef123456789\"  # CWE-798\n    db_password = \"admin123\"  # CWE-798\n    return api_key, db_password"
+        }
+      ],
+      "recommendation": "Move credentials to environment variables or secure secrets manager. Never commit secrets to code.",
+      "confidence": 1.0,
+      "patch": {
+        "path": "src/sample_module.py",
+        "diff": "--- a/src/sample_module.py\n+++ b/src/sample_module.py\n+import os\n \n def hardcoded_credentials():\n     \"\"\"SECURITY: Load credentials from environment.\"\"\"\n-    api_key = \"sk_live_abcdef123456789\"\n-    db_password = \"admin123\"\n+    api_key = os.getenv(\"API_KEY\")\n+    db_password = os.getenv(\"DB_PASSWORD\")\n+    if not api_key or not db_password:\n+        raise ValueError(\"Missing required environment variables\")\n     return api_key, db_password\n"
+      }
+    },
+    {
+      "id": "cov_001",
+      "title": "Low coverage: src/sample_module.py",
+      "category": "test_gap",
+      "severity": "medium",
+      "description": "src/sample_module.py has 60.0% coverage (threshold: 80%)",
+      "evidence": [
+        {
+          "file": "src/sample_module.py",
+          "line": 0,
+          "excerpt": "Coverage: 60.0%"
+        }
+      ],
+      "recommendation": "Add tests to reach 80% coverage. Focus on error cases: empty config, missing fields, and edge cases.",
+      "confidence": 1.0
+    },
+    {
+      "id": "cov_002",
+      "title": "Low coverage: src/utils.py",
+      "category": "test_gap",
+      "severity": "medium",
+      "description": "src/utils.py has 45.5% coverage (threshold: 80%)",
+      "evidence": [
+        {
+          "file": "src/utils.py",
+          "line": 0,
+          "excerpt": "Coverage: 45.5%"
+        }
+      ],
+      "recommendation": "Add comprehensive unit tests for utility functions. Aim for >80% coverage.",
+      "confidence": 1.0
+    },
+    {
+      "id": "lint_001",
+      "title": "flake8: Expected 2 blank lines, found 0",
+      "category": "style",
+      "severity": "low",
+      "description": "PEP 8 style violation: Expected 2 blank lines before function definition.",
+      "evidence": [
+        {
+          "file": "src/sample_module.py",
+          "line": 5,
+          "excerpt": "Code: E302"
+        }
+      ],
+      "recommendation": "Fix PEP 8 style issue. Add 2 blank lines between top-level definitions.",
+      "confidence": 0.8
+    },
+    {
+      "id": "lint_002",
+      "title": "flake8: Trailing whitespace",
+      "category": "style",
+      "severity": "low",
+      "description": "PEP 8 style violation: Trailing whitespace detected.",
+      "evidence": [
+        {
+          "file": "src/sample_module.py",
+          "line": 15,
+          "excerpt": "Code: W291"
+        }
+      ],
+      "recommendation": "Remove trailing whitespace. Use a formatter like black or autopep8.",
+      "confidence": 0.8
+    }
+  ],
+  "suggested_prs": [
+    {
+      "title": "fix: Add null check to parse_config, fix test",
+      "description": "Fixes #123\n\n## Changes\n- Add validation for empty config files in `parse_config()`\n- Add unit test for empty input case\n- Prevents IndexError on line 8\n\n## Test Plan\n- `pytest tests/test_sample.py::test_parse_config_invalid`\n\n## Risk: Low",
+      "branch_name": "fix/parse-config-empty-input",
+      "files_changed": [
+        {
+          "path": "src/sample_module.py",
+          "diff": "--- a/src/sample_module.py\n+++ b/src/sample_module.py\n@@ -5,9 +5,12 @@ def parse_config(config_path):\n \"\"\"Parse configuration file.\"\"\"\n     with open(config_path) as f:\n         data = f.read()\n-    \n+\n+    if not data.strip():\n+        raise ValueError(\"Config file is empty\")\n+\n     lines = data.split('\\n')\n-    first_line = lines[0]\n+    first_line = lines[0]  # Now safe\n     return {\n         'name': first_line.split('=')[1],\n         'value': lines[1].split('=')[1]\n"
+        },
+        {
+          "path": "tests/test_sample.py",
+          "diff": "--- a/tests/test_sample.py\n+++ b/tests/test_sample.py\n@@ -26,3 +26,10 @@ def test_hardcoded_credentials():\n     api_key, password = hardcoded_credentials()\n     assert api_key == \"sk_live_abcdef123456789\"\n     assert password == \"admin123\"\n+\n+\n+def test_parse_config_invalid():\n+    \"\"\"Test parsing empty config.\"\"\"\n+    import tempfile\n+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:\n+        with pytest.raises(ValueError, match=\"empty\"):\n+            parse_config(f.name)\n"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "analysis_duration_seconds": 0.82,
+    "agent_version": "1.0.0"
+  }
+}

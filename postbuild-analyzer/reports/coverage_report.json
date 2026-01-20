@@ -1,0 +1,13 @@
+{
+  "overall_percent": 72.5,
+  "files_below_threshold": [
+    {
+      "file": "src/sample_module.py",
+      "percent": 60.0
+    },
+    {
+      "file": "src/utils.py",
+      "percent": 45.5
+    }
+  ]
+}

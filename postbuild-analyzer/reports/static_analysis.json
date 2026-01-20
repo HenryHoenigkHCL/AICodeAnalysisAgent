@@ -1,0 +1,58 @@
+{
+  "linters": [
+    {
+      "tool": "flake8",
+      "issues": [
+        {
+          "file": "src/sample_module.py",
+          "line": 5,
+          "code": "E302",
+          "message": "Expected 2 blank lines, found 0",
+          "severity": "warning"
+        },
+        {
+          "file": "src/sample_module.py",
+          "line": 15,
+          "code": "W291",
+          "message": "Trailing whitespace",
+          "severity": "warning"
+        }
+      ]
+    }
+  ],
+  "security": [
+    {
+      "tool": "bandit",
+      "issues": [
+        {
+          "file": "src/sample_module.py",
+          "line": 38,
+          "message": "Use of eval() detected",
+          "severity": "high",
+          "cwe": "CWE-95"
+        },
+        {
+          "file": "src/sample_module.py",
+          "line": 44,
+          "message": "Potential hardcoded password",
+          "severity": "medium",
+          "cwe": "CWE-798"
+        }
+      ]
+    }
+  ],
+  "type_checks": [
+    {
+      "tool": "mypy",
+      "issues": [
+        {
+          "file": "src/sample_module.py",
+          "line": 10,
+          "code": "index-error",
+          "message": "Potentially missing dict key 'price'",
+          "severity": "error"
+        }
+      ]
+    }
+  ]
+}

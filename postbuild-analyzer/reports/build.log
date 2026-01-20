@@ -1,0 +1,42 @@
+Sample build output log
+=======================
+
+Starting tests...
+Running: pytest tests/ -v
+
+tests/test_sample.py::test_parse_config_valid PASSED
+tests/test_sample.py::test_calculate_total PASSED
+tests/test_sample.py::test_calculate_total_empty PASSED
+tests/test_sample.py::test_hardcoded_credentials PASSED
+tests/test_sample.py::test_parse_config_invalid FAILED
+
+FAILURES:
+======================== FAILURES =========================
+________________ test_parse_config_invalid ________________
+
+    def test_parse_config_invalid():
+        result = parse_config('')
+        
+>       IndexError: list index out of range
+      File "src/sample_module.py", line 8, in parse_config
+        first_line = lines[0]
+
+======================== short test summary info =========
+FAILED tests/test_sample.py::test_parse_config_invalid
+
+Running coverage analysis...
+Coverage: 72.5% overall
+Files below 80% threshold:
+  - src/sample_module.py: 60.0%
+  - src/utils.py: 45.5%
+
+Running static analysis...
+flake8 checking...
+src/sample_module.py:5:0: E302 expected 2 blank lines, found 0
+src/sample_module.py:15:18: W291 trailing whitespace
+
+bandit security check...
+src/sample_module.py:38: HIGH - Use of eval() detected
+src/sample_module.py:44: MEDIUM - Potential hardcoded password
+
+Build completed with warnings.

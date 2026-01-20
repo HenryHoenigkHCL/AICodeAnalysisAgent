@@ -1,0 +1,25 @@
+# PostBuild Analyzer Configuration
+
+coverage_threshold: 80
+complexity_threshold: 10
+severity_mappings:
+  critical: ["security", "failing_tests", "type_errors"]
+  high: ["missing_coverage", "performance", "maintainability"]
+
+# Analysis features
+enable_security_scan: true
+enable_type_check: true
+enable_coverage_analysis: true
+enable_complexity_analysis: true
+
+# Output options
+auto_create_pr: false  # Set to true to auto-create PRs for low-risk fixes
+conservative_mode: true  # Only suggest, don't auto-apply
+include_raw_logs: true  # Include full logs in appendix
+
+# Redaction rules (for secrets)
+redact_patterns:
+  - "password.*=.*"
+  - "api_key.*=.*"
+  - "token.*=.*"
+  - "sk_live_[a-zA-Z0-9]+"
