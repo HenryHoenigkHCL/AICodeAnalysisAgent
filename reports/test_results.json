@@ -1,15 +1,7 @@
 {
-  "total": 5,
-  "passed": 4,
-  "failed": 1,
+  "total": 0,
+  "passed": 0,
+  "failed": 0,
   "skipped": 0,
-  "failures": [
-    {
-      "test_id": "test_parse_config_invalid",
-      "file": "tests/test_sample.py",
-      "line": 28,
-      "message": "IndexError: list index out of range",
-      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_sample.py\", line 30, in test_parse_config_invalid\n    result = parse_config('')\n  File \"src/sample_module.py\", line 8, in parse_config\n    first_line = lines[0]\nIndexError: list index out of range"
-    }
-  ]
+  "failures": []
 }

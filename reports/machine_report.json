@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "repository": "https://github.com/HenryHoenigkHCL/AICodeAnalysisAgent.git",
+  "ref": "a58667c0",
+  "timestamp_utc": "2026-01-20T16:14:34.555163+00:00",
+  "overall_status": "warning",
+  "build_summary": {
+    "build_status": "success",
+    "build_log_excerpt": "Sample build output log\n=======================\n\nStarting tests...\nRunning: pytest tests/ -v\n\ntests/test_sample.py::test_parse_config_valid PASSED\ntests/test_sample.py::test_calculate_total PASSED\ntests/test_sample.py::test_calculate_total_empty PASSED\ntests/test_sample.py::test_hardcoded_credentials PASSED\ntests/test_sample.py::test_parse_config_invalid FAILED\n\nFAILURES:\n======================== FAILURES =========================\n________________ test_parse_config_invalid ________________\n\n    def test_parse_config_invalid():\n        result = parse_config('')\n        \n>       IndexError: list index out of range\n      File \"src/sample_module.py\", line 8, in parse_config\n... [truncated] ...\nflake8 checking...\nsrc/sample_module.py:5:0: E302 expected 2 blank lines, found 0\nsrc/sample_module.py:15:18: W291 trailing whitespace\n\nbandit security check...\nsrc/sample_module.py:38: HIGH - Use of eval() detected\nsrc/sample_module.py:44: MEDIUM - Potential hardcoded password\n\nBuild completed with warnings.\n"
+  },
+  "tests": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "failures": []
+  },
+  "coverage": {
+    "overall_percent": 0,
+    "files_below_threshold": []
+  },
+  "static_analysis": {
+    "linters": [],
+    "security": [],
+    "type_checks": []
+  },
+  "findings": [
+    {
+      "id": "build_000",
+      "title": "Build failure: Build error detected",
+      "category": "bug",
+      "severity": "high",
+      "description": "Build log indicates: Build error detected",
+      "evidence": [
+        {
+          "file": "build.log",
+          "line": 19,
+          "excerpt": "        result = parse_config('')\n        \n>       IndexError: list index out of range\n      File \"src/sample_module.py\", line 8, in parse_config\n        first_line = lines[0]"
+        }
+      ],
+      "recommendation": "Review the build log and fix the error. Run locally to reproduce.",
+      "confidence": 0.85,
+      "patch": null,
+      "tests_to_add": null
+    },
+    {
+      "id": "build_001",
+      "title": "Build failure: Build failed",
+      "category": "bug",
+      "severity": "high",
+      "description": "Build log indicates: Build failed",
+      "evidence": [
+        {
+          "file": "build.log",
+          "line": 10,
+          "excerpt": "tests/test_sample.py::test_calculate_total_empty PASSED\ntests/test_sample.py::test_hardcoded_credentials PASSED\ntests/test_sample.py::test_parse_config_invalid FAILED\n\nFAILURES:"
+        }
+      ],
+      "recommendation": "Review the build log and fix the error. Run locally to reproduce.",
+      "confidence": 0.85,
+      "patch": null,
+      "tests_to_add": null
+    },
+    {
+      "id": "build_002",
+      "title": "Build failure: Build failed",
+      "category": "bug",
+      "severity": "high",
+      "description": "Build log indicates: Build failed",
+      "evidence": [
+        {
+          "file": "build.log",
+          "line": 24,
+          "excerpt": "\n======================== short test summary info =========\nFAILED tests/test_sample.py::test_parse_config_invalid\n\nRunning coverage analysis..."
+        }
+      ],
+      "recommendation": "Review the build log and fix the error. Run locally to reproduce.",
+      "confidence": 0.85,
+      "patch": null,
+      "tests_to_add": null
+    }
+  ],
+  "metadata": {
+    "analysis_duration_seconds": 0.023286104202270508,
+    "agent_version": "1.0.0"
+  }
+}

@@ -35,8 +35,6 @@ htmlcov/
 *~
 
 # Reports (local runs)
-reports/machine_report.json
-reports/human_report.md
 .env
 .env.local
 
