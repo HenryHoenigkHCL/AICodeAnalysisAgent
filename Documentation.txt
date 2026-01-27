@@ -1,0 +1,55 @@
+  
+
+Overview: 
+
+The SLA Alert & Compliance Agent is an AI-based assistant that proactively monitors SLA progress from incident or ticket reports. It is especially useful when direct integration with systems like ServiceNow is not available, but automated email reports can be generated and shared. The agent analyses these reports and issues timely alerts to prevent potential SLA breaches. 
+
+The Problem: 
+
+Incident teams often rely on manual ServiceNow reports or static dashboards to monitor SLAs. This reactive approach leads to late alerts, missed deadlines, and higher SLA breach rates. 
+
+The Solution 
+
+SLA Alert & Compliance Agent 
+
+The agent automates SLA tracking and alerts at key thresholds (30%, 60%, 80%, and near breach). 
+
+It ensures timely action by notifying engineers and automatically escalating P1/P2 tickets to managers from the 30% mark. 
+
+Key Benefits 
+
+Proactive SLA Compliance. Early alerts before breaches occur. 
+
+Automatic Escalation. Managers notified early for critical issues. 
+
+Reduced Manual Effort. No need for manual monitoring or follow-ups. 
+
+Faster Resolution. Helps prioritize high-risk incidents. 
+
+Audit Trail: All alerts logged for performance tracking. 
+
+  
+
+How It Works (High Level Flow) 
+
+Reads exported ticket/incident reports in email (CSV or Excel). 
+
+Analyses SLA progress and ticket priority. 
+
+Sends alerts at 30%, 60%, 80%, and near-breach levels. 
+
+Automatically escalates critical tickets. 
+
+Maintains a log of alerts for audit and analysis. 
+
+  
+
+Outcome 
+
+The agent shifts SLA tracking from reactive to proactive, improving compliance, reducing breaches, and saving manual effort even without direct ServiceNow integration. 
+
+Implementation Overview: 
+
+Comprehensive SLA monitoring system that ingests incident reports from Outlook emails, extracts data using AI, calculates SLA timelines, and issues timely alerts to prevent breaches. 
+
+Architecture Overview: 

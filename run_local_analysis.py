@@ -8,7 +8,7 @@ from pathlib import Path
 from analyzer.postbuild_analyzer import PostBuildAnalyzer
 
 
-def run_local_analysis(repo_path: str = ".") -> None:
+def run_local_analysis(repo_path: str = "C:\Users\henry.hoenigk\Repos\Neuer Ordner\analyzer\TestRepo") -> None:
     """
     Run full analysis locally.
     Collects build artifacts, runs tests, coverage, and static analysis.

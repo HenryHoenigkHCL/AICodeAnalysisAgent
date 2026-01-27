@@ -11,6 +11,40 @@ enable_security_scan: true
 enable_type_check: true
 enable_coverage_analysis: true
 enable_complexity_analysis: true
+enable_coding_standards_check: true
+
+# Coding Standards Configuration
+coding_standards:
+  # Function/method length standards
+  max_function_lines: 50
+  max_function_complexity: 10
+  
+  # Naming conventions
+  naming_conventions:
+    class_pattern: "^[A-Z][a-zA-Z0-9]*$"  # PascalCase
+    function_pattern: "^[a-z_][a-z0-9_]*$"  # snake_case
+    constant_pattern: "^[A-Z_][A-Z0-9_]*$"  # UPPER_CASE
+    private_pattern: "^_[a-z_]"  # _private prefix
+  
+  # Code structure standards
+  imports_organized: true  # Standard imports before third-party before local
+  max_nested_levels: 4
+  docstring_required: true
+  
+  # File standards
+  max_file_lines: 500
+  trailing_whitespace: false
+  tabs_not_allowed: true
+  
+  # Severity levels for violations
+  violation_severities:
+    max_function_lines: "medium"
+    max_function_complexity: "high"
+    naming_convention: "low"
+    missing_docstring: "low"
+    imports_order: "low"
+    max_nested_levels: "medium"
+    max_file_lines: "low"
 
 # Output options
 auto_create_pr: false  # Set to true to auto-create PRs for low-risk fixes

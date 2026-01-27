@@ -80,6 +80,7 @@ jobs:
             --test-results reports/test_results.json \
             --coverage-report reports/coverage_report.json \
             --static-analysis reports/static_analysis.json \
+            --config config.yaml \
             --commit-sha ${{ github.sha }} \
             --repo-url ${{ github.server_url }}/${{ github.repository }} \
             --output-dir reports

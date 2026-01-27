@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import time
+import ast
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -142,6 +143,7 @@ class PostBuildAnalyzer:
         self._analyze_tests()
         self._analyze_coverage()
         self._analyze_static_analysis()
+        self._analyze_coding_standards()
         self._analyze_code_quality()
 
         # Sort findings by severity
@@ -325,6 +327,184 @@ class PostBuildAnalyzer:
         # This is a placeholder for deeper source code analysis
         # In production, this would use AST analysis, complexity metrics, etc.
         pass
+
+    def _analyze_coding_standards(self) -> None:
+        """Analyze code against configurable coding standards."""
+        standards = self.config.get("coding_standards", {})
+        if not standards or not self.config.get("enable_coding_standards_check", False):
+            return
+
+        # Get all Python files in the repository
+        python_files = list(self.repo_path.rglob("*.py"))
+        
+        # Filter out common non-code directories
+        exclude_dirs = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", "node_modules", "build", "dist"}
+        python_files = [
+            f for f in python_files 
+            if not any(excluded in f.parts for excluded in exclude_dirs)
+        ]
+
+        violations = []
+
+        for py_file in python_files[:50]:  # Limit to first 50 files to avoid timeout
+            try:
+                content = py_file.read_text(encoding="utf-8", errors="ignore")
+                
+                # Check file-level standards
+                violations.extend(self._check_file_standards(py_file, content, standards))
+                
+                # Parse and check code structure
+                try:
+                    tree = ast.parse(content)
+                    violations.extend(self._check_ast_standards(py_file, tree, content, standards))
+                except SyntaxError:
+                    pass  # Skip files with syntax errors
+                    
+            except Exception:
+                continue
+
+        # Convert violations to findings
+        for violation in violations[:10]:  # Top 10 violations
+            severity = standards.get("violation_severities", {}).get(
+                violation["rule"], "low"
+            )
+            finding = Finding(
+                id=f"std_{len(self.findings):03d}",
+                title=f"Coding Standard: {violation['title']}",
+                category="style",
+                severity=severity,
+                description=violation["description"],
+                evidence=[
+                    {
+                        "file": str(violation["file"].relative_to(self.repo_path)),
+                        "line": violation.get("line", 0),
+                        "excerpt": violation.get("excerpt", ""),
+                    }
+                ],
+                recommendation=violation["recommendation"],
+                confidence=0.75,
+            )
+            self.findings.append(finding)
+
+    def _check_file_standards(self, py_file: Path, content: str, standards: Dict) -> List[Dict]:
+        """Check file-level coding standards."""
+        violations = []
+        lines = content.split("\n")
+        
+        # Check file length
+        max_file_lines = standards.get("max_file_lines", 500)
+        if len(lines) > max_file_lines:
+            violations.append({
+                "file": py_file,
+                "line": 1,
+                "rule": "max_file_lines",
+                "title": f"File exceeds {max_file_lines} lines",
+                "description": f"File has {len(lines)} lines, exceeds limit of {max_file_lines}",
+                "recommendation": f"Consider splitting this file into smaller modules",
+                "excerpt": f"File length: {len(lines)} lines"
+            })
+        
+        # Check for trailing whitespace
+        if standards.get("trailing_whitespace", False):
+            for i, line in enumerate(lines, 1):
+                if line and line[-1].isspace():
+                    violations.append({
+                        "file": py_file,
+                        "line": i,
+                        "rule": "trailing_whitespace",
+                        "title": "Trailing whitespace found",
+                        "description": f"Line {i} has trailing whitespace",
+                        "recommendation": "Remove trailing whitespace",
+                        "excerpt": repr(line[-20:])
+                    })
+                    break  # Only report first occurrence per file
+        
+        # Check for tabs
+        if standards.get("tabs_not_allowed", True):
+            for i, line in enumerate(lines, 1):
+                if "\t" in line:
+                    violations.append({
+                        "file": py_file,
+                        "line": i,
+                        "rule": "tabs_not_allowed",
+                        "title": "Tab character used instead of spaces",
+                        "description": f"Line {i} contains tab character(s)",
+                        "recommendation": "Use spaces for indentation instead of tabs",
+                        "excerpt": repr(line[:50])
+                    })
+                    break  # Only report first occurrence per file
+        
+        return violations
+
+    def _check_ast_standards(self, py_file: Path, tree: ast.AST, content: str, standards: Dict) -> List[Dict]:
+        """Check AST-based coding standards."""
+        violations = []
+        lines = content.split("\n")
+        max_function_lines = standards.get("max_function_lines", 50)
+        max_nested_levels = standards.get("max_nested_levels", 4)
+        naming_conventions = standards.get("naming_conventions", {})
+        docstring_required = standards.get("docstring_required", True)
+        
+        for node in ast.walk(tree):
+            # Check function/method length
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                func_lines = node.end_lineno - node.lineno if node.end_lineno else 0
+                
+                if func_lines > max_function_lines:
+                    violations.append({
+                        "file": py_file,
+                        "line": node.lineno,
+                        "rule": "max_function_lines",
+                        "title": f"Function '{node.name}' exceeds {max_function_lines} lines",
+                        "description": f"Function has {func_lines} lines, exceeds limit of {max_function_lines}",
+                        "recommendation": "Consider breaking this function into smaller, focused functions",
+                        "excerpt": f"def {node.name}(...) at line {node.lineno}"
+                    })
+                
+                # Check function naming convention
+                if naming_conventions.get("function_pattern"):
+                    pattern = naming_conventions["function_pattern"]
+                    if not re.match(pattern, node.name):
+                        violations.append({
+                            "file": py_file,
+                            "line": node.lineno,
+                            "rule": "naming_convention",
+                            "title": f"Function name '{node.name}' doesn't follow convention",
+                            "description": f"Function name should match pattern: {pattern}",
+                            "recommendation": f"Rename function to follow {pattern} pattern (snake_case)",
+                            "excerpt": f"def {node.name}(...)"
+                        })
+                
+                # Check for docstring
+                if docstring_required:
+                    docstring = ast.get_docstring(node)
+                    if not docstring and node.name != "__init__":  # Allow __init__ without docstring
+                        violations.append({
+                            "file": py_file,
+                            "line": node.lineno,
+                            "rule": "missing_docstring",
+                            "title": f"Function '{node.name}' missing docstring",
+                            "description": "Function should have a docstring describing its purpose",
+                            "recommendation": "Add a docstring to document the function's purpose, parameters, and return value",
+                            "excerpt": f"def {node.name}(...)"
+                        })
+            
+            # Check class naming convention
+            elif isinstance(node, ast.ClassDef):
+                if naming_conventions.get("class_pattern"):
+                    pattern = naming_conventions["class_pattern"]
+                    if not re.match(pattern, node.name):
+                        violations.append({
+                            "file": py_file,
+                            "line": node.lineno,
+                            "rule": "naming_convention",
+                            "title": f"Class name '{node.name}' doesn't follow convention",
+                            "description": f"Class name should match pattern: {pattern}",
+                            "recommendation": f"Rename class to follow {pattern} pattern (PascalCase)",
+                            "excerpt": f"class {node.name}(...)"
+                        })
+        
+        return violations
 
     @staticmethod
     def _map_severity(severity_str: str) -> str:
@@ -518,6 +698,7 @@ class PostBuildAnalyzer:
 def main():
     """CLI entry point."""
     import argparse
+    import yaml
 
     parser = argparse.ArgumentParser(description="Post-build Code Analysis Agent")
     parser.add_argument("repo_path", help="Path to repository")
@@ -525,11 +706,20 @@ def main():
     parser.add_argument("--test-results", help="Path to test results JSON")
     parser.add_argument("--coverage-report", help="Path to coverage report JSON")
     parser.add_argument("--static-analysis", help="Path to static analysis JSON")
+    parser.add_argument("--config", help="Path to configuration YAML file")
     parser.add_argument("--commit-sha", help="Git commit SHA")
     parser.add_argument("--repo-url", help="Repository URL")
     parser.add_argument("--output-dir", default="./reports", help="Output directory for reports")
 
     args = parser.parse_args()
+
+    # Load configuration
+    config = {}
+    if args.config:
+        config_path = Path(args.config)
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f) or {}
 
     analyzer = PostBuildAnalyzer(
         repo_path=args.repo_path,
@@ -539,6 +729,7 @@ def main():
         static_analysis_path=args.static_analysis,
         commit_sha=args.commit_sha,
         repo_url=args.repo_url,
+        config=config,
     )
 
     machine_path, human_path = analyzer.save_reports(Path(args.output_dir))
